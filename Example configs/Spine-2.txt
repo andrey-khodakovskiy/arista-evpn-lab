@@ -1,0 +1,108 @@
+! device: Spine-2 (vEOS, EOS-4.26.0.1F)
+!
+! boot system flash:/vEOS-lab.swi
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname Spine-2
+!
+spanning-tree mode mstp
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret 
+!
+interface Ethernet1
+   description to_Leaf-1
+   mtu 9214
+   no switchport
+   ip address 10.2.1.0/31
+!
+interface Ethernet2
+   description to_Leaf-2
+   mtu 9214
+   no switchport
+   ip address 10.2.2.0/31
+!
+interface Ethernet3
+   description to_Leaf-3
+   mtu 9214
+   no switchport
+   ip address 10.2.3.0/31
+!
+interface Ethernet4
+   description to_Leaf-4
+   mtu 9214
+   no switchport
+   ip address 10.2.4.0/31
+!
+interface Ethernet5
+   description to_Leaf-5
+   mtu 9214
+   no switchport
+   ip address 10.2.5.0/31
+!
+interface Ethernet6
+   description to_Leaf-6
+   mtu 9214
+   no switchport
+   ip address 10.2.6.0/31
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Loopback0
+   description BGP EVPN Peering
+   ip address 10.0.0.12/32
+!
+interface Management1
+   ip address 10.255.72.162/24
+!
+ip routing
+!
+router bgp 65000
+   router-id 10.0.0.12
+   no bgp default ipv4-unicast
+   distance bgp 20 200 200
+   maximum-paths 4 ecmp 64
+   neighbor evpn peer group
+   neighbor evpn next-hop-unchanged
+   neighbor evpn update-source Loopback0
+   neighbor evpn ebgp-multihop 3
+   neighbor evpn send-community extended
+   neighbor evpn maximum-routes 12000 warning-only
+   neighbor 10.0.0.1 peer group evpn
+   neighbor 10.0.0.1 remote-as 65001
+   neighbor 10.0.0.2 peer group evpn
+   neighbor 10.0.0.2 remote-as 65001
+   neighbor 10.0.0.3 peer group evpn
+   neighbor 10.0.0.3 remote-as 65002
+   neighbor 10.0.0.4 peer group evpn
+   neighbor 10.0.0.4 remote-as 65002
+   neighbor 10.0.0.5 peer group evpn
+   neighbor 10.0.0.5 remote-as 65003
+   neighbor 10.0.0.6 peer group evpn
+   neighbor 10.0.0.6 remote-as 65003
+   neighbor 10.2.1.1 remote-as 65001
+   neighbor 10.2.2.1 remote-as 65001
+   neighbor 10.2.3.1 remote-as 65002
+   neighbor 10.2.4.1 remote-as 65002
+   neighbor 10.2.5.1 remote-as 65003
+   neighbor 10.2.6.1 remote-as 65003
+   !
+   address-family evpn
+      neighbor evpn activate
+   !
+   address-family ipv4
+      neighbor 10.2.1.1 activate
+      neighbor 10.2.2.1 activate
+      neighbor 10.2.3.1 activate
+      neighbor 10.2.4.1 activate
+      neighbor 10.2.5.1 activate
+      neighbor 10.2.6.1 activate
+      network 10.0.0.12/32
+!
+end
