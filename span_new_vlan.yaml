@@ -1,0 +1,23 @@
+- name: Span new vlan across Leaf switches 
+  hosts: # role_leaf
+  - Leaf-1
+  - Leaf-2
+  # - Leaf-3
+  # - Leaf-4
+  connection: ansible.netcommon.network_cli
+  gather_facts: no
+  vars:
+  - ansible_user: admin
+  - ansible_password: admin
+  # ansible_network_os: arista.eos.eos
+  # ansible_become: yes
+  # ansible_become_method: enable
+  - vlan_name: "Network_172.16.30.0"
+  - vlan_id: "30"
+  
+
+  tasks:
+  - name: Configure L2 VXLAN
+    eos_config:
+      src: templates/span_new_vlan_template.j2
+      save_when: changed

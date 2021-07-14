@@ -1,0 +1,12 @@
+- name: "Add Leaf pair to Netbox"
+  connection: local
+  hosts: localhost
+  gather_facts: no
+  vars:   
+    leaf_ids:
+      - 3
+      - 4
+    vtep_number: 2
+
+  roles:
+  - netbox_new_leaf

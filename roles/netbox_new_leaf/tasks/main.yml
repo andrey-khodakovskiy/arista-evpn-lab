@@ -1,0 +1,17 @@
+- name: Create pair of Leaf devices
+  import_tasks: add_devices.yaml
+
+- name: Configure MGMT interfaces
+  import_tasks: mgmt_intf.yaml
+
+- name: Configure Leaf-to-Spine connections
+  import_tasks: leaf_to_spine_connections.yaml
+
+- name: Configure MLAG connection
+  import_tasks: MLAG_connection.yaml
+
+- name: Configure VLAN interfaces
+  import_tasks: vlan_intf.yaml
+
+- name: Configure Loopback interfaces
+  import_tasks: loopback_intf.yaml

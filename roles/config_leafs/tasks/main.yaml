@@ -1,0 +1,2 @@
+- name: Config leafs
+  import_tasks: config_leafs.yaml

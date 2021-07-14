@@ -1,0 +1,114 @@
+!
+service routing protocols model multi-agent
+!
+hostname {{ inventory_hostname }}
+!
+spanning-tree mode mstp
+no spanning-tree vlan-id 4093-4094
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret admin
+!
+vlan 4093
+   name mlag-ibgp
+   trunk group mlag-peer
+!
+vlan 4094
+   name mlag-peer
+   trunk group mlag-peer
+!
+interface Port-Channel999
+   description mlag-peer
+   switchport mode trunk
+   switchport trunk group mlag-peer
+   spanning-tree link-type point-to-point
+!
+{% for intf in interfaces %}
+{% if intf.lag %}
+interface {{ intf.name }}
+  description {{ intf.description }}
+  channel-group {{ intf.lag.name | regex_replace('Port-Channel') }} mode active 
+{% elif intf._occupied %}
+interface {{ intf.name }}
+  description {{ intf.description }}
+  mtu 9214
+  no switchport
+  ip address {{ intf.ip_addresses[0].address }}
+!
+{% endif %}
+{% endfor %}
+!
+{% for intf in interfaces %}
+{% if intf.type.value == 'virtual'  and 'Port-Channel' not in intf.name %}
+interface {{ intf.name }}
+{% if intf.description %}
+  description {{ intf.description }}
+{% endif %}
+  ip address {{ intf.ip_addresses[0].address }}
+{% endif %}
+{% if intf.name == 'Vlan4093' %}
+  mtu 9214
+!
+{% endif %}
+{% if intf.name == 'Vlan4094' %}
+  no autostate
+!
+{% endif %}
+!
+{% endfor %}
+
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan virtual-router encapsulation mac-address mlag-system-id
+   vxlan udp-port 4789
+   vxlan learn-restrict any
+!
+ip virtual-router mac-address c0:01:ca:fe:ba:be
+!
+ip routing
+!
+mlag configuration
+   domain-id leafs
+   local-interface Vlan4094
+   peer-address {{ mlag_peer_ip }} 
+   peer-address heartbeat {{ mlag_peer_mgmt_ip }}
+   peer-link Port-Channel999
+   dual-primary detection delay 10 action errdisable all-interfaces
+!
+router bgp {{ bgp_as_number }}
+   router-id {{ loopback0_ip }}
+   no bgp default ipv4-unicast
+   distance bgp 20 200 200
+   maximum-paths 4 ecmp 64
+   neighbor evpn peer group
+   neighbor evpn remote-as {{ spine_bgp_as_num }}
+   neighbor evpn update-source Loopback0
+   neighbor evpn ebgp-multihop 3
+   neighbor evpn send-community extended
+   neighbor evpn maximum-routes 12000 warning-only
+   neighbor underlay peer group
+   neighbor underlay remote-as {{ spine_bgp_as_num }}
+   neighbor underlay maximum-routes 12000 warning-only
+   neighbor underlay_ibgp peer group
+   neighbor underlay_ibgp remote-as {{ bgp_as_number }}
+   neighbor underlay_ibgp next-hop-self
+   neighbor underlay_ibgp maximum-routes 12000 warning-only
+{% for ip in spine_loopback0_ips %}
+   neighbor {{ ip }} peer group evpn
+{% endfor %}
+{% for ip in spine_underlay_ips %}
+   neighbor {{ ip }} peer group underlay
+{% endfor %}
+   neighbor {{ mlag_peer_ip }} peer group underlay_ibgp
+   !
+   address-family evpn
+      neighbor evpn activate
+   !
+   address-family ipv4
+      neighbor underlay activate
+      neighbor underlay_ibgp activate
+      network {{ loopback0_ip }}/32
+      network {{ loopback1_ip }}/32
+!
+end

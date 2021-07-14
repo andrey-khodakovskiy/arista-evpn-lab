@@ -1,0 +1,22 @@
+site: Arista EVPN Lab
+tenant: Arista EVPN Lab
+vrf: arista-evpn-lab
+leaf_mgmt_subnet: 10.255.72.150
+leaf_mgmt_mask: 24
+loopback0_network: '10.0.0.0/24'
+loopback1_network: '10.100.100.0/24'
+mlag_ibgp_subnet: '10.254.253.0/31'
+mlag_peer_link_subnet: '10.254.254.0/31'
+
+vlan_intf:
+  - name: Vlan4093
+    description: MLAG iBGP
+  - name: Vlan4094
+    description: MLAG Peer-Link
+
+spines: "{{ query('netbox.netbox.nb_lookup', 'devices',
+                api_endpoint = netbox_url,
+                api_filter='site=arista-evpn-lab role=spine',
+                token = netbox_token ) | json_query('[*].value.name')}}"
+
+spines_leafs_loop: "{{ range(1,(spines |length)+1) | product(leaf_ids) |list }}"

@@ -1,0 +1,16 @@
+- name: Create pair of Leaf devices
+  netbox.netbox.netbox_device:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "Leaf-{{ item }}"
+      device_type: veos-lab
+      device_role: Leaf
+      site: "{{ site }}"
+      tenant: "{{ tenant }}"
+      platform: EOS
+      status: Active
+      custom_fields:
+        bgp_as_number: "{{ 65000 + vtep_number }}"
+    state: present
+  loop: "{{ leaf_ids }}"

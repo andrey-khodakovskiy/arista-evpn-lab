@@ -1,0 +1,23 @@
+- name: "Set facts - loopback0 interface, neighbor's: BGP AS, underlay and loopback0 interfaces"
+  set_fact:
+    loopback0_ip: "{{ (interfaces | json_query(loopback0_query))[0] | ipaddr('address') }}"
+    neigh_as:  "{{ groups['role_leaf'] | map('extract', hostvars, 'bgp_as_number') }}"
+    neigh_ips: "{{ interfaces | json_query(interface_query) | ipaddr('peer') }}"
+    leaf_loopback0_ips: "{{ groups['role_leaf'] | map('extract', hostvars, 'interfaces') | json_query(leaf_loopback0_query) | ipaddr('address') | list | flatten }}"
+  vars:
+  - loopback0_query: "[?name == `Loopback0`].ip_addresses[0].address"
+  - interface_query: "[?_occupied].ip_addresses[0].address"
+  - leaf_loopback0_query: "[*][?name == `Loopback0`].ip_addresses[0].address"
+  delegate_to: 
+
+- name: Save locally Spine config files
+  ansible.builtin.template:
+    src: templates/spine_template.j2
+    dest: "configs/{{ inventory_hostname }}.txt"
+  delegate_to: localhost
+
+- name: Render a template onto Spine switches
+  arista.eos.eos_config:
+    backup: yes
+    src: templates/spine_template.j2
+    save_when: changed

@@ -1,0 +1,86 @@
+- name: Create prefixes for Leaf-to-Spine links
+  netbox.netbox.netbox_prefix:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      prefix: "10.{{item.0}}.{{item.1}}.0/31"
+      site: "{{ site }}"
+      tenant: "{{ tenant }}"
+      vrf: "{{ vrf }}"
+      status: Active
+      description: "Spine-{{item.0}} to Leaf-{{item.1}} network"
+    state: present
+  loop: "{{ spines_leafs_loop }}"
+
+
+- name: Create IP in Leaf-to-Spine subnet and attach it to Spine
+  netbox.netbox.netbox_ip_address:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      prefix: "10.{{item.0}}.{{item.1}}.0/31"
+      tenant: "{{ tenant }}"
+      vrf: "{{ vrf }}"
+      description: "to_Leaf-{{ item.1 }}"
+      assigned_object:
+        name: "Ethernet{{ item.1 }}"
+        device: "Spine-{{ item.0 }}"
+    state: new
+  loop: "{{ spines_leafs_loop }}"
+
+
+- name: Create IP in Leaf-to-Spine subnet and attach it to Leaf
+  netbox.netbox.netbox_ip_address:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      prefix: "10.{{item.0}}.{{item.1}}.0/31"
+      tenant: "{{ tenant }}"
+      vrf: "{{ vrf }}"
+      description: "to_Spine-{{ item.0 }}"
+      assigned_object:
+        name: "Ethernet{{ item.0 }}"
+        device: "Leaf-{{ item.1 }}"
+    state: new
+  loop: "{{ spines_leafs_loop }}"
+
+
+- name: Add description to Spine's interfaces
+  netbox.netbox.netbox_device_interface:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "Ethernet{{ item.1 }}"
+      device: "Spine-{{ item.0 }}"
+      description: "to_Leaf-{{ item.1 }}"
+    state: present
+  loop: "{{ spines_leafs_loop }}"
+
+
+- name: Add description to Leaf's interfaces
+  netbox.netbox.netbox_device_interface:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "Ethernet{{ item.0 }}"
+      device: "Leaf-{{ item.1 }}"
+      description: "to_Spine-{{ item.0 }}"
+    state: present
+  loop: "{{ spines_leafs_loop }}"
+
+
+- name: Create cables between Leafs and Spines
+  netbox.netbox.netbox_cable:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      termination_a_type: dcim.interface
+      termination_a:
+        device: "Spine-{{ item.0 }}"
+        name: "Ethernet{{ item.1 }}"
+      termination_b_type: dcim.interface
+      termination_b:
+        device: "Leaf-{{ item.1 }}"
+        name: "Ethernet{{ item.0 }}"
+    state: present
+  loop: "{{ spines_leafs_loop }}"

@@ -1,0 +1,62 @@
+!
+service routing protocols model multi-agent
+!
+hostname {{ inventory_hostname }}
+!
+spanning-tree mode mstp
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret admin
+!
+{% for intf in interfaces %}
+{% if intf._occupied %}
+interface {{ intf.name }}
+   description {{ intf.description }}
+   mtu 9214
+   no switchport
+   ip address {{ intf.ip_addresses[0].address }}
+!
+{% elif intf.type.value == 'virtual' %}
+interface {{ intf.name }}
+{% if intf.description %}
+  description {{ intf.description }}
+{% endif %}
+  ip address {{ intf.ip_addresses[0].address }}
+!
+{% endif %}
+{% endfor %}
+!
+ip routing
+!
+router bgp {{ bgp_as_number }}
+  router-id {{ loopback0_ip }}
+  no bgp default ipv4-unicast
+  distance bgp 20 200 200
+  maximum-paths 4 ecmp 64
+  neighbor evpn peer group
+  neighbor evpn next-hop-unchanged
+  neighbor evpn update-source Loopback0
+  neighbor evpn ebgp-multihop 3
+  neighbor evpn send-community extended
+  neighbor evpn maximum-routes 12000 warning-only
+!
+{% for ip, bgp_as in leaf_loopback0_ips|zip(neigh_as) %}
+   neighbor {{ ip }} peer group evpn
+   neighbor {{ ip }} remote-as {{ bgp_as }}
+{% endfor %}
+!
+{% for ip, bgp_as in neigh_ips|zip(neigh_as) %}
+   neighbor {{ ip }} remote-as {{ bgp_as }}
+{% endfor %}
+   !
+   address-family evpn
+      neighbor evpn activate
+   !
+   address-family ipv4
+   {% for ip in neigh_ips %}
+      neighbor {{ ip }} activate
+   {% endfor %}
+      network {{ loopback0_ip }}/32
+!
+end

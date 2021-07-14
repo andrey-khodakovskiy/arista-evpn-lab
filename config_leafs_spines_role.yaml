@@ -1,0 +1,22 @@
+- name: refresh inventory
+  hosts: all
+  gather_facts: no
+  tasks:
+  - meta: refresh_inventory
+
+- name: Config new pair of Leafs
+  hosts: 
+  - Leaf-5
+  - Leaf-6
+  connection: ansible.netcommon.network_cli
+  gather_facts: no
+  roles:
+  - config_leafs
+
+- name: Add new config to Spines
+  hosts: 
+  - role_spine
+  connection: ansible.netcommon.network_cli
+  gather_facts: no
+  roles:
+  - config_spines

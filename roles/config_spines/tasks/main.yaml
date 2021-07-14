@@ -1,0 +1,2 @@
+- name: Config spines
+  import_tasks: config_spines.yaml

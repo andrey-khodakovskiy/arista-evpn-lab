@@ -1,0 +1,37 @@
+- name: Set facts - MLAG and Loopbacks
+  set_fact:
+    mlag_ip: "{{ (interfaces | json_query(mlag_ip_query))[0] }}"
+    mlag_peer: "{{ (interfaces | json_query(mlag_peer_query))[0] }}"
+    loopback0_ip: "{{ (interfaces | json_query(loopback0_query))[0] | ipaddr('address')}}"
+    loopback1_ip: "{{ (interfaces | json_query(loopback1_query))[0] | ipaddr('address')}}"
+  vars:
+  - mlag_ip_query: "[?name == `Vlan4094`].ip_addresses[0].address"
+  - mlag_peer_query: "[?name == `Ethernet8`].cable_peer.device.name"
+  - loopback0_query: "[?name == `Loopback0`].ip_addresses[0].address"
+  - loopback1_query: "[?name == `Loopback1`].ip_addresses[0].address"
+
+- name: Set facts - MLAG peer
+  set_fact:
+    mlag_peer_mgmt_ip: "{{ hostvars[mlag_peer].primary_ip4 }}"
+    mlag_peer_ip: "{{ mlag_ip | ipaddr('peer') }}"
+
+- name: Set facts - BGP
+  set_fact:
+    spine_bgp_as_num: "{{ hostvars['Spine-1'].bgp_as_number }}"
+    spine_underlay_ips: "{{ interfaces | json_query(underlay_ips_query) | ipaddr('peer')}}"
+    spine_loopback0_ips: "{{ groups['role_spine'] | map('extract', hostvars, 'interfaces') | json_query(spine_loopback0_query) | ipaddr('address') | list | flatten }}"
+  vars:
+  - underlay_ips_query: "[?contains(description, 'to_Spine')].ip_addresses[0].address"
+  - spine_loopback0_query: "[*][?name == `Loopback0`].ip_addresses[0].address" 
+
+- name: Save Leaf config files locally
+  ansible.builtin.template:
+    src: templates/leaf_template.j2
+    dest: "configs/{{ inventory_hostname }}.txt"
+  delegate_to: localhost
+
+- name: Render a template onto Leaf switches
+  arista.eos.eos_config:
+    backup: yes
+    src: templates/leaf_template.j2
+    save_when: changed

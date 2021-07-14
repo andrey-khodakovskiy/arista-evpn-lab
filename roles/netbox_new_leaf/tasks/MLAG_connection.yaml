@@ -1,0 +1,40 @@
+- name: Create LAG interface Port-Channel999
+  netbox.netbox.netbox_device_interface:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "Port-Channel999"
+      device: "Leaf-{{ item }}"
+      form_factor: LAG
+      description: "MLAG Peer-link"
+    state: present
+  loop: "{{ leaf_ids }}"
+
+
+- name: Add Eth8 to LAG interface Port-Channel999
+  netbox.netbox.netbox_device_interface:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      name: "Ethernet8"
+      device: "Leaf-{{ item }}"
+      lag: "Port-Channel999"
+      description: "MLAG Peer-link"
+    state: present
+  loop: "{{ leaf_ids }}"
+
+
+- name: Create cable between Leaf's ports Eth8
+  netbox.netbox.netbox_cable:
+    netbox_url: "{{ netbox_url }}"
+    netbox_token: "{{ netbox_token }}"
+    data:
+      termination_a_type: dcim.interface
+      termination_a:
+        device: "Leaf-{{ leaf_ids.0 }}"
+        name: Ethernet8
+      termination_b_type: dcim.interface
+      termination_b:
+        device: "Leaf-{{ leaf_ids.1 }}"
+        name: Ethernet8
+    state: present
