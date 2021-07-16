@@ -1,3 +1,4 @@
+! Command: show running-config
 ! device: Spine-1 (vEOS, EOS-4.26.0.1F)
 !
 ! boot system flash:/vEOS-lab.swi
@@ -12,7 +13,7 @@ spanning-tree mode mstp
 !
 no aaa root
 !
-username admin privilege 15 role network-admin secret 
+username admin privilege 15 role network-admin secret sha512 $6$Q63yDUQLHpjhGQnL$lzo2X24iK6yax6eOg0V.Z39TtD40dyh9zzJ55gdQaiRtCAZH4X0tT8t2/0NQb/02K05uirpcUq8lS4Cv1AQyj1
 !
 interface Ethernet1
    description to_Leaf-1

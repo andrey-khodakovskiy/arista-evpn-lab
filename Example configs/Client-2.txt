@@ -1,3 +1,4 @@
+! Command: show running-config
 ! device: Client-2 (vEOS, EOS-4.26.0.1F)
 !
 ! boot system flash:/vEOS-lab.swi
@@ -12,7 +13,7 @@ spanning-tree mode mstp
 !
 no aaa root
 !
-username admin privilege 15 role network-admin secret 
+username admin privilege 15 role network-admin secret sha512 $6$buo/Dnzu1omjv5a2$piTKUiNyi.nu0f9rfSuvuS8oQQ6cozSCWEy4jHvFAEd5ziJB./WMHle80W6/Cln0/FIaRaxL.k38q70I0mdBN.
 !
 vlan 10
    name Network_172.16.10.0

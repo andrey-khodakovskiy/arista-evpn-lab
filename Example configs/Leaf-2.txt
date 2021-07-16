@@ -1,3 +1,4 @@
+! Command: show running-config
 ! device: Leaf-2 (vEOS, EOS-4.26.0.1F)
 !
 ! boot system flash:/vEOS-lab.swi
@@ -13,7 +14,7 @@ no spanning-tree vlan-id 4093-4094
 !
 no aaa root
 !
-username admin privilege 15 role network-admin secret 
+username admin privilege 15 role network-admin secret sha512 $6$cKV76nn5EzYHBbD3$CINM.g8LYVVcbAuRTJ.RQluhTXX/M1aSrGduWktBq8lcygNn4lt8XbZgtigiiBwY1z/1YduYUiJaKyIy/EW32.
 !
 vlan 10
    name Network_172.16.10.0
@@ -149,6 +150,7 @@ router bgp 65001
    neighbor 10.1.2.0 peer group underlay
    neighbor 10.2.2.0 peer group underlay
    neighbor 10.254.253.0 peer group underlay_ibgp
+   redistribute connected
    !
    vlan 10
       rd 65001:1000010

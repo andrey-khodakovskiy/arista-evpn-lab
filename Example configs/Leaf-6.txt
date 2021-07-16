@@ -1,3 +1,4 @@
+! Command: show running-config
 ! device: Leaf-6 (vEOS, EOS-4.26.0.1F)
 !
 ! boot system flash:/vEOS-lab.swi
@@ -13,10 +14,13 @@ no spanning-tree vlan-id 4093-4094
 !
 no aaa root
 !
-username admin privilege 15 role network-admin secret 
+username admin privilege 15 role network-admin secret sha512 $6$aCD32ZXIHf.MwRbY$LQXzjVJGmGQUtNlOcX4hhu0eU6fy5/onI3uwuXKruHOTnuK3SssP82E6/naU6clcGufhIxpoomQl.KGndzfvb0
 !
 vlan 10
    name Network_172.16.10.0
+!
+vlan 100
+   name INTERNET
 !
 vlan 4093
    name mlag-ibgp
@@ -87,6 +91,11 @@ interface Vlan20
    vrf CLIENTS
    ip address virtual 172.16.20.1/24
 !
+interface Vlan100
+   description INTERNET
+   vrf CLIENTS
+   ip address 172.16.100.6/24
+!
 interface Vlan4093
    description MLAG iBGP
    mtu 9214
@@ -141,6 +150,7 @@ router bgp 65003
    neighbor 10.1.6.0 peer group underlay
    neighbor 10.2.6.0 peer group underlay
    neighbor 10.254.254.0 peer group underlay_ibgp
+   neighbor 172.16.100.1 remote-as 65100
    !
    vlan 10
       rd 65003:1000010
@@ -153,6 +163,7 @@ router bgp 65003
    address-family ipv4
       neighbor underlay activate
       neighbor underlay_ibgp activate
+      no neighbor 172.16.100.1 activate
       network 10.0.0.6/32
       network 10.100.100.3/32
    !
@@ -160,6 +171,10 @@ router bgp 65003
       rd 65003:1000000
       route-target import evpn 1:1000000
       route-target export evpn 1:1000000
+      neighbor 172.16.100.1 remote-as 65100
       redistribute connected
+      !
+      address-family ipv4
+         neighbor 172.16.100.1 activate
 !
 end

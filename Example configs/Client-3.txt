@@ -1,3 +1,4 @@
+! Command: show running-config
 ! device: Client-3 (vEOS, EOS-4.26.0.1F)
 !
 ! boot system flash:/vEOS-lab.swi
@@ -12,7 +13,7 @@ spanning-tree mode mstp
 !
 no aaa root
 !
-username admin privilege 15 role network-admin secret 
+username admin privilege 15 role network-admin secret sha512 $6$lrn2mUIzOlczEazW$7HfU5GdQJpZOXgwgv7TmG1WZFL7pmWuWSz/8QkSNKAdU32ABDe0CZoVA7kZS8SRQ84fm0Md5Krs3P5TGim3hS1
 !
 vlan 10
    name Network_172.16.10.0
@@ -69,6 +70,7 @@ no ip routing vrf 10
 ip routing vrf INTERNET
 !
 ip route vrf 10 0.0.0.0/0 172.16.10.1
+ip route vrf INTERNET 0.0.0.0/0 Null0
 !
 router bgp 65100
    router-id 10.0.0.100
@@ -79,13 +81,12 @@ router bgp 65100
    neighbor internet remote-as 65003
    neighbor internet default-originate
    !
-   vrf internet
-      rd 65100:100
-      route-target import 100:1000
-      route-target export 100:1000
+   address-family ipv4
+      neighbor internet activate
+   !
+   vrf INTERNET
       router-id 10.0.0.100
       neighbor 172.16.100.5 peer group internet
       neighbor 172.16.100.6 peer group internet
-      network 8.8.8.8/32
 !
 end

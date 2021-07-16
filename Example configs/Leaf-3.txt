@@ -1,3 +1,4 @@
+! Command: show running-config
 ! device: Leaf-3 (vEOS, EOS-4.26.0.1F)
 !
 ! boot system flash:/vEOS-lab.swi
@@ -13,7 +14,7 @@ no spanning-tree vlan-id 4093-4094
 !
 no aaa root
 !
-username admin privilege 15 role network-admin secret 
+username admin privilege 15 role network-admin secret sha512 $6$O/w.FOp86hlw6jPh$dtYCu6tkAJ1WE4A6i4GPsMOdy5fUo24CEFremRBHEXJ1uj2wlUvQS3R8shlmW1icoLftrEwbKyLQ5F5CWSclZ.
 !
 vlan 10
    name Network_172.16.10.0
